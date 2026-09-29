@@ -1,65 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# */AIPND-revision/intropyproject-classify-pet-images/print_results.py
-#
-# PROGRAMMER: Jemimah Jemutai
+# PROGRAMMER: Student
 # DATE CREATED: 2026-09-29
 # REVISED DATE:
-# PURPOSE: Print the final classification statistics and requested
-#          misclassification details.
 
-def print_results(results_dic, results_stats_dic, model,
+def print_results(results_dic, results_stats_dic, model, 
                   print_incorrect_dogs=False, print_incorrect_breed=False):
     """
-    Prints summary results on the classification and, when requested,
-    incorrectly classified dogs and incorrectly classified dog breeds.
-
-    Parameters:
-      results_dic - Dictionary with key as image filename and value as a list:
-                    [pet label, classifier label, match, pet_is_dog,
-                     classifier_is_dog]
-      results_stats_dic - Dictionary containing classification counts and
-                          percentages.
-      model - CNN architecture name: resnet, alexnet, or vgg.
-      print_incorrect_dogs - Print dog/not-dog errors when True.
-      print_incorrect_breed - Print dog breed errors when True.
-
-    Returns:
-      None
+    Prints summary results on the classification and displays any incorrectly 
+    classified dogs or dog breeds if requested.
     """
-    print("\n\n*** Results Summary for CNN Model Architecture",
-          model.upper(), "***")
-    print("{:20}: {:3d}".format(
-        "N Images", results_stats_dic["n_images"]))
-    print("{:20}: {:3d}".format(
-        "N Dog Images", results_stats_dic["n_dogs_img"]))
-    print("{:20}: {:3d}".format(
-        "N Not-Dog Images", results_stats_dic["n_notdogs_img"]))
+    print(f"\n\n*** RESULTS SUMMARY FOR MODEL ARCHITECTURE: {model.upper()} ***")
+    print(f"Total Number of Images       : {results_stats_dic['n_images']:3d}")
+    print(f"Number of Dog Images         : {results_stats_dic['n_dogs_img']:3d}")
+    print(f"Number of 'Not-a' Dog Images : {results_stats_dic['n_notdogs_img']:3d}")
+    print("-" * 55)
 
-    print("\n")
     for key, value in results_stats_dic.items():
-        if key.startswith("pct"):
-            print("{:20}: {:5.1f}".format(key, value))
+        if key.startswith('pct_'):
+            label = key.replace('pct_', '% ').replace('_', ' ').title()
+            print(f"{label:<30}: {value:6.2f}%")
 
-    # Print images where the classifier confused a dog with a non-dog,
-    # or a non-dog with a dog.
-    if (print_incorrect_dogs and
-            ((results_stats_dic["n_correct_dogs"]
-              + results_stats_dic["n_correct_notdogs"])
-             != results_stats_dic["n_images"])):
-        print("\nINCORRECT Dog/NOT Dog Assignments:")
-        for key, value in results_dic.items():
-            if value[3] != value[4]:
-                print("Real: {:>26}   Classifier: {:>30}".format(
-                    value[0], value[1]))
+    total_correct_species = results_stats_dic['n_correct_dogs'] + results_stats_dic['n_correct_notdogs']
+    if print_incorrect_dogs and (total_correct_species != results_stats_dic['n_images']):
+        print("\nINCORRECT Dog/Not-a-Dog Classifications:")
+        for filename, data in results_dic.items():
+            if sum(data[3:]) == 1:
+                print(f"File: {filename:<25} | Truth: {data[0]:<20} | Predicted: {data[1]}")
 
-    # Print dog images for which the classifier identified a dog but
-    # selected the wrong breed.
-    if (print_incorrect_breed and
-            results_stats_dic["n_correct_dogs"]
-            != results_stats_dic["n_correct_breed"]):
-        print("\nINCORRECT Dog Breed Assignment:")
-        for key, value in results_dic.items():
-            if value[3] == 1 and value[4] == 1 and value[2] == 0:
-                print("Real: {:>26}   Classifier: {:>30}".format(
-                    value[0], value[1]))
+    if print_incorrect_breed and (results_stats_dic['n_correct_dogs'] != results_stats_dic['n_correct_breed']):
+        print("\nINCORRECT Dog Breed Classifications:")
+        for filename, data in results_dic.items():
+            if sum(data[3:]) == 2 and data[2] == 0:
+                print(f"File: {filename:<25} | Truth: {data[0]:<20} | Predicted: {data[1]}")
