@@ -68,9 +68,12 @@ def adjust_results4_isadog(results_dic, dogfile):
     # Read dog names into a lookup dictionary
     with open(dogfile, "r") as infile:
         for line in infile:
-            dog_name = line.strip().lower()
-            if dog_name and dog_name not in dognames_dic:
-                dognames_dic[dog_name] = 1
+            # dognames.txt may contain several comma-separated synonyms
+            # for the same ImageNet dog class.
+            for dog_name in line.strip().lower().split(","):
+                dog_name = dog_name.strip()
+                if dog_name and dog_name not in dognames_dic:
+                    dognames_dic[dog_name] = 1
 
     # Check whether pet label and classifier label are dogs
     for key in results_dic:
